@@ -1,0 +1,12 @@
+[package]
+name = "mag"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gtk = "0.18.2"
+image = "0.25.5"
+pixels = "0.15.0"
+screenshots = "0.8.10"
+tray-icon = "0.20.0"
+winit = "0.30.9"
