@@ -1,51 +1,27 @@
-use std::time::{Duration, Instant};
-
+use crate::handlers::keyboard_handlers::handle_raw_keyboard_events;
 use crate::renderer::Renderer;
 use crate::screenshot::Screenshot;
 use crate::user_event::UserEvent;
 
 use winit::application::ApplicationHandler;
-use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::DeviceEvent::Key;
-use winit::event::{ElementState, RawKeyEvent, WindowEvent};
-use winit::window::{Fullscreen, Window, WindowAttributes, WindowId};
+use winit::event::{RawKeyEvent, WindowEvent};
+use winit::window::{Window, WindowId};
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::PhysicalKey;
-use winit::keyboard::KeyCode;
 
 #[derive(Default)]
-pub struct App {
+pub(crate) struct App {
     window: Option<Window>,
     screenshot: Option<Screenshot>,
     is_redraw_ready: bool,
-}
-
-impl App {
-    fn create_window(&mut self, event_loop: &ActiveEventLoop) {
-        self.window = {
-            let monitor = event_loop.primary_monitor().expect("SHIT");
-
-            let window_attributes = WindowAttributes::default()
-                .with_inner_size(monitor.size())
-                .with_min_inner_size(monitor.size())
-                .with_fullscreen(Some(Fullscreen::Borderless(Some(monitor))))
-                .with_visible(false);
-
-            Some(event_loop.create_window(window_attributes).expect("Event loop s*cks at creating windows :("))
-        };
-    }
 }
 
 impl ApplicationHandler<UserEvent> for App {
     fn resumed(&mut self, _event_loop: &ActiveEventLoop) {}
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(window_ref) = self.window.as_ref() {
-            if self.is_redraw_ready {
-                window_ref.request_redraw();
-                self.is_redraw_ready = false;
-            }
-        }
+        self.is_redraw_ready = request_redraw(self.window.as_ref(), self.is_redraw_ready);
     }
 
     fn device_event(
@@ -55,25 +31,15 @@ impl ApplicationHandler<UserEvent> for App {
         event: winit::event::DeviceEvent,
     ) {
         match event {
-            Key(RawKeyEvent { physical_key: PhysicalKey::Code(key_code), state }) => match (key_code, state) {
-                (KeyCode::F12, ElementState::Pressed) => {
-                    if self.window.is_some() { return }
-
-                    self.screenshot = Some(Screenshot::default());
-                    self.screenshot.as_mut().map(|screenshot_ref| {
-                        screenshot_ref.capture();
-                    });
-                    self.create_window(event_loop);
-                    self.is_redraw_ready = true;
-                },
-                (KeyCode::Escape, ElementState::Pressed) => {
-                    if self.window.is_none() { return }
-                    self.window = None;
-                    self.screenshot = None;
-                    self.is_redraw_ready = true;
-                },
-                _ => (),
-            }
+            Key(RawKeyEvent { physical_key: PhysicalKey::Code(key_code), state }) =>
+                handle_raw_keyboard_events(
+                    key_code,
+                    state,
+                    event_loop,
+                    &mut self.window,
+                    &mut self.screenshot,
+                    &mut self.is_redraw_ready
+                ),
             _ => (),
         }
     }
@@ -105,14 +71,35 @@ impl ApplicationHandler<UserEvent> for App {
                     is_synthetic);
             },
             WindowEvent::RedrawRequested => {
-                let window_ref = self.window.as_ref().expect("I am pretty sure the window is not created yet o^O");
-
-                let mut renderer = Renderer::new(window_ref);
-
-                renderer.render_screenshot(self.screenshot.as_ref().expect("Strange, I capture screen right before creating window -_-"));
-                window_ref.set_visible(true);
+                redraw(self.window.as_ref(), self.screenshot.as_ref());
             },
             _ => (),
         }
     }
+}
+
+fn redraw(window: Option<&Window>, screenshot: Option<&Screenshot>) {
+    let window = match window {
+        Some(w) => w,
+        None => return
+    }; // solution against race condition
+    let screenshot = match screenshot {
+        Some(s) => s,
+        None => return
+    }; // solution against race condition
+
+    let mut renderer = Renderer::new(window);
+
+    renderer.render_screenshot(screenshot);
+    window.set_visible(true);
+}
+
+fn request_redraw(window: Option<&Window>, is_redraw_ready: bool) -> bool {
+    if let Some(window_ref) = window {
+        if is_redraw_ready {
+            window_ref.request_redraw();
+            return false;
+        }
+    }
+    true
 }

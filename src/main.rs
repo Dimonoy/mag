@@ -3,6 +3,8 @@ mod tray;
 mod app;
 mod screenshot;
 mod renderer;
+mod actions;
+mod handlers;
 
 use crate::user_event::UserEvent;
 use crate::app::App;
