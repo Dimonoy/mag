@@ -1,4 +1,4 @@
-pub enum UserEvent {
-    TrayIconEvent(tray_icon::TrayIconEvent),
-    TrayIconMenuEvent(tray_icon::menu::MenuEvent)
+pub enum TrayIconEvents {
+    Event(tray_icon::TrayIconEvent),
+    Menu(tray_icon::menu::MenuEvent)
 }

@@ -1,7 +1,10 @@
-use crate::user_event::UserEvent;
-
 use tray_icon::menu::{Menu, MenuItem};
 use tray_icon::{TrayIcon, TrayIconBuilder};
+
+pub enum TrayIconEvents {
+    Event(tray_icon::TrayIconEvent),
+    Menu(tray_icon::menu::MenuEvent)
+}
 
 fn load_icon(path: &std::path::Path) -> tray_icon::Icon {
     let (icon_rgba, icon_width, icon_height) = {
@@ -37,17 +40,17 @@ fn create_and_run_tray_icon_app() -> TrayIcon {
     tray_app
 }
 
-pub fn setup_tray_user_event_proxies(event_loop: &winit::event_loop::EventLoop<UserEvent>) {
-    let proxy = event_loop.create_proxy();
-    tray_icon::TrayIconEvent::set_event_handler(Some(move |event| {
-        let _ = proxy.send_event(UserEvent::TrayIconEvent(event));
-    }));
-
-    let proxy = event_loop.create_proxy();
-    tray_icon::menu::MenuEvent::set_event_handler(Some(move |event| {
-        let _ = proxy.send_event(UserEvent::TrayIconMenuEvent(event));
-    }));
-}
+// pub fn setup_tray_user_event_proxies(event_loop: &winit::event_loop::EventLoop<TrayIconEvents>) {
+//     let proxy = event_loop.create_proxy();
+//     tray_icon::TrayIconEvent::set_event_handler(Some(move |event| {
+//         let _ = proxy.send_event(TrayIconEvents::Event(event));
+//     }));
+//
+//     let proxy = event_loop.create_proxy();
+//     tray_icon::menu::MenuEvent::set_event_handler(Some(move |event| {
+//         let _ = proxy.send_event(TrayIconEvents::Menu(event));
+//     }));
+// }
 
 pub fn run_tray_icon() {
     #[cfg(target_os = "linux")]
@@ -58,4 +61,7 @@ pub fn run_tray_icon() {
 
         gtk::main();
     });
+
+    #[cfg(not(target_os = "linux"))]
+    let _tray_app = create_and_run_tray_icon_app();
 }
