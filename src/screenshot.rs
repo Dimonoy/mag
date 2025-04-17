@@ -1,3 +1,4 @@
+use image::EncodableLayout;
 use screenshots::Screen;
 
 pub(crate) struct Screenshot {
@@ -19,7 +20,7 @@ impl Screenshot {
         }
     }
 
-    pub(crate) fn peek_image(&self) -> Option<&image::RgbaImage> {
-        self.screenshot.as_ref()
+    pub(crate) fn as_bytes(&self) -> &[u8] {
+        self.screenshot.as_ref().expect("Screenshot was not taken").as_bytes()
     }
 }
