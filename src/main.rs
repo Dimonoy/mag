@@ -22,7 +22,6 @@ fn main() -> Result<(), String> {
 
 fn run_keyboard_listener() -> Result<(), String> {
     let device_state = DeviceState::new();
-
     let is_app_running = Arc::new(Mutex::new(false));
 
     loop {
