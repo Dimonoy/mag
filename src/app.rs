@@ -28,22 +28,28 @@ fn run_event_loop(
 
     canvas.show_window();
 
+    let mut previous_offset_sum = 0.0;
     'running: loop {
         let mouse_state = event_pump.mouse_state();
 
         for event in event_pump.poll_iter() {
-            if let LoopState::Exit = handle_events(
+            match handle_events(
                 event,
                 &mut canvas_props,
                 mouse_state.x() as f32,
                 mouse_state.y() as f32,
             ) {
-                break 'running;
+                LoopState::Exit => break 'running,
+                LoopState::ForceUpdate => canvas.update(&mut canvas_props, &texture_wrapper)?,
+                LoopState::Continue => (),
             }
         }
 
-        canvas.update(&mut canvas_props, &texture_wrapper)?;
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        if canvas_props.offset_x + canvas_props.offset_y != previous_offset_sum {
+            canvas.update(&mut canvas_props, &texture_wrapper)?;
+            println!("Continue");
+            previous_offset_sum = canvas_props.offset_x + canvas_props.offset_y;
+        }
     }
 
     Ok(())
