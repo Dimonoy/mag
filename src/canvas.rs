@@ -39,7 +39,11 @@ impl AppCanvas {
             .hidden()
             .build()
             .map_err(|e| e.to_string())?;
-        let window_canvas = window.into_canvas().present_vsync().build().map_err(|e| e.to_string())?;
+        let window_canvas = window.into_canvas()
+            .present_vsync()
+            .accelerated()
+            .build()
+            .map_err(|e| e.to_string())?;
 
         Ok(Self { window_canvas })
     }

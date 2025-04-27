@@ -1,3 +1,4 @@
+mod event_loop;
 mod system_tray;
 mod screenshot;
 mod utils;
@@ -11,17 +12,15 @@ use app::run_app;
 use system_tray::run_tray_icon;
 use device_query::{DeviceQuery, DeviceState, Keycode};
 
-fn main() -> Result<(), String> {
+fn main() {
     { // Tray Application
         run_tray_icon();
     }
 
-    run_keyboard_listener()?;
-
-    Ok(())
+    run_keyboard_listener();
 }
 
-fn run_keyboard_listener() -> Result<(), String> {
+fn run_keyboard_listener() {
     let device_state = DeviceState::new();
 
     loop {
@@ -37,6 +36,6 @@ fn run_keyboard_listener() -> Result<(), String> {
             let _ = program.join();
         }
 
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(std::time::Duration::from_millis(20));
     }
 }

@@ -42,7 +42,6 @@ impl EventType {
 }
 
 pub(crate) fn handle_events(event: Event, canvas_props: &mut AppCanvasProps, mouse_x: f32, mouse_y: f32) -> LoopState {
-    println!("{:?}", event);
     let event_type = EventType::from_sdl2_event(event);
 
     match event_type {
