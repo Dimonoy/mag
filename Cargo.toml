@@ -2,13 +2,19 @@
 name = "mag"
 version = "0.1.0"
 edition = "2021"
+resolver = "2"
 
 [dependencies]
 device_query = "3.0.1"
-env_logger = "0.11.8"
-gtk = "0.18.2"
 image = "0.25.5"
-log = "0.4.27"
 screenshots = "0.8.10"
-sdl2 = { version = "0.37.0", features = ["image"] }
+sdl2 = { version = "0.37.0" }
 tray-icon = "0.20.0"
+log = { version = "0.4.27", optional = true }
+env_logger = { version = "0.11.8", optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18.2"
+
+[features]
+dev = ["dep:env_logger", "dep:log"]

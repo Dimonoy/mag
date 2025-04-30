@@ -23,6 +23,7 @@ pub(crate) struct AppCanvas {
     window_canvas: WindowCanvas,
 }
 
+#[derive(Debug)]
 pub(crate) struct AppCanvasProps {
     pub(crate) zoom_scale: f32,
     pub(crate) offset_x: f32,

@@ -1,67 +1,81 @@
-use tray_icon::menu::{Menu, MenuItem};
+use tray_icon::menu::{Menu, MenuEvent, MenuEventReceiver, MenuId, MenuItem};
 use tray_icon::{TrayIcon, TrayIconBuilder};
 
-pub enum TrayIconEvents {
-    Event(tray_icon::TrayIconEvent),
-    Menu(tray_icon::menu::MenuEvent)
+enum SystemTrayMenuItems {
+    Quit,
 }
 
-fn load_icon(path: &std::path::Path) -> tray_icon::Icon {
-    let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open(path)
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
-    };
-    tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon!")
-}
-
-fn create_tray_icon_menu() -> Menu {
-    let menu = Menu::new();
-    let item1 = MenuItem::new("Item 1", true, None);
-    if let Err(err) = menu.append(&item1) {
-        eprintln!("{err:?}");
+impl SystemTrayMenuItems {
+    fn from_menu_id(menu_id: &MenuId) -> Option<Self> {
+        match menu_id.0.parse::<u32>().unwrap() {
+            3 => Some(Self::Quit),
+            _ => None,
+        }
     }
-
-    menu
 }
 
-fn create_and_run_tray_icon_app() -> TrayIcon {
-    let menu = create_tray_icon_menu();
-    let tray_app = TrayIconBuilder::new()
-        .with_menu(Box::new(menu))
-        .with_icon(load_icon(std::path::Path::new("./assets/logo-32x32.png")))
-        .with_tooltip("Mag")
-        .build()
-        .unwrap();
+#[derive(Debug, Default)]
+pub(crate) struct SystemTray;
 
-    tray_app
-}
+impl SystemTray {
+    pub(crate) fn run_tray_icon<'a>(self) -> &'a MenuEventReceiver {
+        #[cfg(target_os = "linux")]
+        std::thread::spawn(move || {
+            gtk::init().unwrap();
 
-// pub fn setup_tray_user_event_proxies(event_loop: &winit::event_loop::EventLoop<TrayIconEvents>) {
-//     let proxy = event_loop.create_proxy();
-//     tray_icon::TrayIconEvent::set_event_handler(Some(move |event| {
-//         let _ = proxy.send_event(TrayIconEvents::Event(event));
-//     }));
-//
-//     let proxy = event_loop.create_proxy();
-//     tray_icon::menu::MenuEvent::set_event_handler(Some(move |event| {
-//         let _ = proxy.send_event(TrayIconEvents::Menu(event));
-//     }));
-// }
+            let _tray_app = self.create_and_run_tray_icon_app();
 
-pub fn run_tray_icon() {
-    #[cfg(target_os = "linux")]
-    std::thread::spawn(|| {
-        gtk::init().unwrap();
+            gtk::main();
+        });
 
+        #[cfg(not(target_os = "linux"))]
         let _tray_app = create_and_run_tray_icon_app();
 
-        gtk::main();
-    });
+        MenuEvent::receiver()
+    }
 
-    #[cfg(not(target_os = "linux"))]
-    let _tray_app = create_and_run_tray_icon_app();
+    fn load_icon(&self, path: &std::path::Path) -> tray_icon::Icon {
+        let (icon_rgba, icon_width, icon_height) = {
+            let image = image::open(path)
+                .expect("Failed to open icon path")
+                .into_rgba8();
+            let (width, height) = image.dimensions();
+            let rgba = image.into_raw();
+            (rgba, width, height)
+        };
+        tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon!")
+    }
+
+    fn create_tray_icon_menu(&self) -> Menu {
+        let menu = Menu::new();
+        let quit = MenuItem::new("Quit", true, None);
+        if let Err(err) = menu.append(&quit) {
+            eprintln!("{err:?}");
+        }
+
+        menu
+    }
+
+    fn create_and_run_tray_icon_app(&self) -> TrayIcon {
+        let menu = self.create_tray_icon_menu();
+        let tray_app = TrayIconBuilder::new()
+            .with_menu(Box::new(menu))
+            .with_icon(self.load_icon(std::path::Path::new("./assets/logo-32x32.png")))
+            .with_tooltip("Mag")
+            .build()
+            .unwrap();
+
+        tray_app
+    }
+}
+
+/// Returns true if Quit was clicked in SysTray menu
+pub(crate) fn is_systray_menu_quit_clicked(systray_menu_events_receiver: &MenuEventReceiver) -> bool {
+    if let Ok(event) = systray_menu_events_receiver.try_recv() {
+        if let Some(SystemTrayMenuItems::Quit) = SystemTrayMenuItems::from_menu_id(event.id()) {
+            return true;
+        }
+    }
+
+    false
 }
