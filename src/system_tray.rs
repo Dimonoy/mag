@@ -34,16 +34,17 @@ impl SystemTray {
         MenuEvent::receiver()
     }
 
-    fn load_icon(&self, path: &std::path::Path) -> tray_icon::Icon {
+    fn try_load_icon(&self, path: &std::path::Path) -> Result<tray_icon::Icon, String> {
+        let image = match image::open(path) {
+            Ok(image_result) => image_result.into_rgba8(),
+            Err(_) => return Err(String::from("Failed to open icon path")),
+        };
         let (icon_rgba, icon_width, icon_height) = {
-            let image = image::open(path)
-                .expect("Failed to open icon path")
-                .into_rgba8();
             let (width, height) = image.dimensions();
             let rgba = image.into_raw();
             (rgba, width, height)
         };
-        tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon!")
+        Ok(tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon!"))
     }
 
     fn create_tray_icon_menu(&self) -> Menu {
@@ -58,14 +59,20 @@ impl SystemTray {
 
     fn create_and_run_tray_icon_app(&self) -> TrayIcon {
         let menu = self.create_tray_icon_menu();
-        let tray_app = TrayIconBuilder::new()
+        let mut tray_app = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
-            .with_icon(self.load_icon(std::path::Path::new("./assets/logo-32x32.png")))
-            .with_tooltip("Mag")
-            .build()
-            .unwrap();
+            .with_tooltip("Mag");
 
-        tray_app
+        match self.try_load_icon(std::path::Path::new("./assets/logo-32x32.png")) {
+            Ok(icon) => tray_app = tray_app.with_icon(icon),
+            Err(error_message) => {
+                #[cfg(feature = "dev")]
+                log::warning!(error_message);
+                ()
+            },
+        }
+
+        tray_app.build().unwrap()
     }
 }
 
