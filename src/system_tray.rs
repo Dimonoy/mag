@@ -1,3 +1,5 @@
+use std::env;
+
 use tray_icon::menu::{Menu, MenuEvent, MenuEventReceiver, MenuId, MenuItem};
 use tray_icon::{TrayIcon, TrayIconBuilder};
 
@@ -63,11 +65,12 @@ impl SystemTray {
             .with_menu(Box::new(menu))
             .with_tooltip("Mag");
 
-        match self.try_load_icon(std::path::Path::new("./assets/logo-32x32.png")) {
+        let path_buf = env::current_exe().unwrap().parent().unwrap().join("assets").join("logo-32x32.png");
+        match self.try_load_icon(path_buf.as_path()) {
             Ok(icon) => tray_app = tray_app.with_icon(icon),
             Err(error_message) => {
                 #[cfg(feature = "dev")]
-                log::warning!(error_message);
+                log::warn!("{}", error_message);
                 ()
             },
         }

@@ -2,6 +2,9 @@
 
 Mag is a simple screen zoomer written in Rust with SDL2 bindings. It captures a screenshot of the current display and visualizes it in fullscreen allowing zooming and panning.
 
+> [!WARNING]
+> Tested only on: Ubuntu 24.04.1 Linux
+
 ## Features ✨
 
 - **Zooming**
@@ -17,11 +20,6 @@ Mag is a simple screen zoomer written in Rust with SDL2 bindings. It captures a 
     - `Left click hold and move`: pan
     - `Q`: quit the Mag
 3. To turn off the app, press `Quit` in the system tray menu
-
-## Prerequisites 🧑💻
-
-> [!INFO]
-> WIP
 
 ## Contributing 🤝
 
