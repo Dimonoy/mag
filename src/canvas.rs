@@ -69,6 +69,9 @@ impl AppCanvas {
 
         let target_rect = get_resolution_rectangle(&canvas_props, resulting_width, resulting_height);
 
+        #[cfg(feature = "dev")]
+        log::info!("Target rectangle: {:?}", target_rect);
+
         self.update_texture(texture_wrapper.texture(), target_rect)?;
         Ok(())
     }

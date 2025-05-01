@@ -1,12 +1,14 @@
 use crate::canvas::AppCanvasProps;
 
 const MIN_ZOOM_SCALE: f32 = 1.0;
-const MAX_ZOOM_SCALE: f32 = 10.0;
+const MAX_ZOOM_SCALE: f32 = 8.0;
+const ZOOM_SCALE_STEP: f32 = 0.5;
 
 pub(crate) fn zoom(canvas_props: &mut AppCanvasProps, mouse_x: f32, mouse_y: f32, y_direction: i32) {
     let prev_zoom = canvas_props.zoom_scale;
 
-    canvas_props.zoom_scale = (canvas_props.zoom_scale + y_direction as f32 * 0.5).clamp(MIN_ZOOM_SCALE, MAX_ZOOM_SCALE);
+    canvas_props.zoom_scale = (canvas_props.zoom_scale + y_direction as f32 * ZOOM_SCALE_STEP)
+        .clamp(MIN_ZOOM_SCALE, MAX_ZOOM_SCALE);
 
     // Adjust offsets to zoom into the mouse cursor's position
     // Translate mouse position into the image coordinate space
