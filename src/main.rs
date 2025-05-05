@@ -27,7 +27,7 @@ fn run_keyboard_listener(systray_menu_events_receiver: &MenuEventReceiver) {
     loop {
         let keys: Vec<Keycode> = device_state.get_keys();
 
-        if keys.contains(&Keycode::LControl) && keys.contains(&Keycode::Z) {
+        if keys.contains(&Keycode::LControl) && keys.contains(&Keycode::LShift) && keys.contains(&Keycode::Z) {
             let systray_menu_events_receiver_clone = systray_menu_events_receiver.clone();
             let program = std::thread::spawn(move || {
                 match run_app(&systray_menu_events_receiver_clone) {

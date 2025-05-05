@@ -1,8 +1,7 @@
 use crate::{
     canvas::AppCanvasProps,
     utils::{
-        mouse::track_mouse_position,
-        zoom::zoom,
+        keyboard::handle_keyboard_events, mouse::track_mouse_position, zoom::zoom
     },
 };
 
@@ -46,7 +45,7 @@ pub(crate) fn handle_events(event: Event, canvas_props: &mut AppCanvasProps, mou
 
     match event_type {
         EventType::Quit => return LoopState::Exit,
-        EventType::KeyDown(_keycode) => (),
+        EventType::KeyDown(keycode) => handle_keyboard_events(canvas_props, keycode, mouse_x, mouse_y),
         EventType::MouseWheel(y) => zoom(canvas_props, mouse_x, mouse_y, y),
         EventType::MouseMotion(xrel, yrel, mousestate) => track_mouse_position(canvas_props, xrel, yrel, mousestate),
         EventType::FocusGained => return LoopState::ForceUpdate,
