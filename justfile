@@ -14,6 +14,9 @@ check:
 build-linux:
     cargo build --release --target x86_64-unknown-linux-gnu
 
+build-windows:
+    cargo build --release --target x86_64-pc-windows-gnu
+
 bundle-linux version:
     cp target/x86_64-unknown-linux-gnu/release/mag .
     tar czvf mag-{{version}}-x86_64.tar.gz assets/ mag
