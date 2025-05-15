@@ -7,8 +7,10 @@ mod app;
 mod canvas;
 mod events;
 mod texture;
+mod program_state;
 
 use app::run_app;
+use program_state::ProgramExitType;
 use system_tray::{is_systray_menu_quit_clicked, SystemTray};
 use device_query::{DeviceQuery, DeviceState, Keycode};
 use tray_icon::menu::MenuEventReceiver;
@@ -17,11 +19,11 @@ fn main() {
     #[cfg(feature = "dev")]
     env_logger::init();
 
-    let systray_menu_events_receiver = SystemTray::default().run_tray_icon();
-    run_keyboard_listener(systray_menu_events_receiver);
+    run_keyboard_listener();
 }
 
-fn run_keyboard_listener(systray_menu_events_receiver: &MenuEventReceiver) {
+fn run_keyboard_listener() {
+    let systray_menu_events_receiver: &MenuEventReceiver = SystemTray::default().run_tray_icon();
     let device_state = DeviceState::new();
 
     loop {
@@ -35,13 +37,12 @@ fn run_keyboard_listener(systray_menu_events_receiver: &MenuEventReceiver) {
                     Err(e) => {
                         #[cfg(feature = "dev")]
                         log::error!("Magnifier app failed to boot: {}", e);
-                        panic!("Magnifier app failed to boot");
+                        panic!("Magnifier app failed to boot: {}", e);
                     }
                 }
             });
-            let event_loop_exit_status = program.join().unwrap();
 
-            if event_loop_exit_status.is_full_exit() {
+            if let ProgramExitType::Exit = program.join().unwrap() {
                 break;
             }
         }

@@ -71,7 +71,7 @@ impl SystemTray {
             Err(error_message) => {
                 #[cfg(feature = "dev")]
                 log::warn!("{}", error_message);
-                ()
+                println!("{}", error_message);
             },
         }
 

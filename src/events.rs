@@ -1,21 +1,13 @@
 use crate::{
-    canvas::AppCanvasProps,
-    utils::{
+    program_state::ProgramRuntime, utils::{
         keyboard::handle_keyboard_events, mouse::track_mouse_position, zoom::zoom
-    },
+    }
 };
 
 use sdl2::{
     event::{Event, WindowEvent},
     keyboard::Keycode, mouse::MouseState,
 };
-
-#[derive(Debug)]
-pub(crate) enum LoopState {
-    Exit,
-    Continue,
-    ForceUpdate,
-}
 
 #[derive(Debug)]
 enum EventType {
@@ -40,17 +32,29 @@ impl EventType {
     }
 }
 
-pub(crate) fn handle_events(event: Event, canvas_props: &mut AppCanvasProps, mouse_x: f32, mouse_y: f32) -> LoopState {
+pub(crate) fn handle_events(event: Event, program_runtime: &mut ProgramRuntime, mouse_x: f32, mouse_y: f32) {
     let event_type = EventType::from_sdl2_event(event);
 
     match event_type {
-        EventType::Quit => return LoopState::Exit,
-        EventType::KeyDown(keycode) => handle_keyboard_events(canvas_props, keycode, mouse_x, mouse_y),
-        EventType::MouseWheel(y) => zoom(canvas_props, mouse_x, mouse_y, y),
-        EventType::MouseMotion(xrel, yrel, mousestate) => track_mouse_position(canvas_props, xrel, yrel, mousestate),
-        EventType::FocusGained => return LoopState::ForceUpdate,
+        EventType::Quit => {
+            program_runtime.set_state_close();
+            return;
+        },
+        EventType::KeyDown(keycode) => {
+            handle_keyboard_events(&mut program_runtime.canvas.props, keycode, mouse_x, mouse_y);
+        }
+        EventType::MouseWheel(y) => {
+            zoom(&mut program_runtime.canvas.props, mouse_x, mouse_y, y);
+        }
+        EventType::MouseMotion(xrel, yrel, mousestate) => {
+            track_mouse_position(&mut program_runtime.canvas.props, xrel, yrel, mousestate);
+        }
+        EventType::FocusGained => {
+            program_runtime.set_state_force_update();
+            return;
+        },
         EventType::Etc => (),
     }
 
-    LoopState::Continue
+    program_runtime.set_state_continue();
 }

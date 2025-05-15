@@ -19,8 +19,9 @@ const APPLICATION_TITLE: &str = "Mag(nifier)";
 const RESOLUTION_WIDTH: u32 = 1920;
 const RESOLUTION_HEIGHT: u32 = 1080;
 
-pub(crate) struct AppCanvas {
+pub struct AppCanvas {
     window_canvas: WindowCanvas,
+    pub props: AppCanvasProps,
 }
 
 #[derive(Debug)]
@@ -33,7 +34,8 @@ pub(crate) struct AppCanvasProps {
 }
 
 impl AppCanvas {
-    pub(crate) fn new(app_canvas_props: &AppCanvasProps, sdl_context: &Sdl) -> Result<Self, String> {
+    pub(crate) fn new(sdl_context: &Sdl) -> Result<Self, String> {
+        let app_canvas_props = AppCanvasProps::default();
         let window = sdl_context.video()?.window(APPLICATION_TITLE, app_canvas_props.width, app_canvas_props.height)
             .fullscreen()
             .always_on_top()
@@ -46,7 +48,7 @@ impl AppCanvas {
             .build()
             .map_err(|e| e.to_string())?;
 
-        Ok(Self { window_canvas })
+        Ok(Self { window_canvas, props: app_canvas_props })
     }
 
     pub(crate) fn get_texture_creator(&self) -> TextureCreator<WindowContext> {
@@ -63,11 +65,11 @@ impl AppCanvas {
         Ok(())
     }
 
-    pub(crate) fn update(&mut self, canvas_props: &mut AppCanvasProps, texture_wrapper: &TextureWrapper) -> Result<(), String> {
-        let (resulting_width, resulting_height) = calculate_resulting_resolution(canvas_props);
-        clamp_screen_borders(canvas_props, &resulting_width, &resulting_height);
+    pub(crate) fn update(&mut self, texture_wrapper: &TextureWrapper) -> Result<(), String> {
+        let (resulting_width, resulting_height) = calculate_resulting_resolution(&self.props);
+        clamp_screen_borders(&mut self.props, &resulting_width, &resulting_height);
 
-        let target_rect = get_resolution_rectangle(&canvas_props, resulting_width, resulting_height);
+        let target_rect = get_resolution_rectangle(&self.props, resulting_width, resulting_height);
 
         #[cfg(feature = "dev")]
         log::info!("Target rectangle: {:?}", target_rect);
