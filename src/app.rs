@@ -5,7 +5,7 @@ use crate::program_state::{ProgramExitType, ProgramRuntime};
 use crate::window::create_window;
 
 pub(crate) fn run_app(systray_menu_events_receiver: &MenuEventReceiver) -> Result<ProgramExitType, String> {
-    sdl2::hint::set("SDL_RENDER_SCALE_QUALITY", "linear");
+    sdl2::hint::set("SDL_RENDER_SCALE_QUALITY", "best");
     let sdl_context = sdl2::init()?;
 
     let canvas = create_window(&sdl_context);
